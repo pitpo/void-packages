@@ -1,0 +1,70 @@
+# Template file for 'polybar'
+pkgname=polybar-git
+version=20180523
+revision=1
+build_style=cmake
+configure_args="
+ -DENABLE_ALSA=$(vopt_if alsa ON OFF)
+ -DENABLE_PULSEAUDIO=$(vopt_if pulseaudio ON OFF)
+ -DENABLE_CURL=$(vopt_if curl ON OFF)
+ -DENABLE_I3=$(vopt_if i3 ON OFF)
+ -DENABLE_MPD=$(vopt_if mpd ON OFF)
+ -DENABLE_NETWORK=$(vopt_if network ON OFF)"
+hostmakedepends="pkg-config xcb-proto git"
+makedepends="cairo-devel xcb-util-image-devel xcb-util-wm-devel xcb-util-xrm-devel zlib-devel
+ $(vopt_if alsa "alsa-lib-devel")
+ $(vopt_if pulseaudio "pulseaudio-devel")
+ $(vopt_if curl "libcurl-devel")
+ $(vopt_if i3 "i3-devel jsoncpp-devel")
+ $(vopt_if mpd "libmpdclient-devel")
+ $(vopt_if network "wireless_tools-devel")"
+short_desc="A fast and easy-to-use status bar"
+maintainer="Piotr Gabrielski <ppitpo@gmail.com>"
+license="MIT"
+homepage="https://github.com/jaagr/polybar"
+
+replaces="lemonbuddy>=0 polybar>=0"
+build_options="alsa pulseaudio curl i3 mpd network"
+build_options_default="$build_options"
+
+desc_option_alsa="Enable support for ALSA"
+desc_option_pulseaudio="Enable support for PulseAudio"
+desc_option_curl="Enable support for cURL"
+desc_option_i3="Enable support for i3"
+desc_option_mpd="Enable support for MPD"
+desc_option_network="Enable support for network"
+
+CXXFLAGS="-Wno-error=deprecated-declarations"
+
+if [ "$build_option_network" ]; then
+	case "$XBPS_TARGET_MACHINE" in
+		*-musl) CXXFLAGS+=" -D_LINUX_IF_ETHER_H" ;;
+	esac
+fi
+
+if [ "$CROSS_BUILD" ]; then
+	configure_args+=" -DTHREADS_PTHREAD_ARG=OFF"
+fi
+
+do_fetch() {
+	local url=git://github.com/jaagr
+	msg_normal "Fetching source from git ...\n"
+	git clone "${url}/polybar" ${pkgname}-${version}
+	git clone "${url}/xpp" xpp-${version}
+	if [ $(vopt_if i3 0 1) -eq 0 ]; then
+		git clone "${url}/i3ipcpp" i3ipcpp-${version}
+	fi
+}
+
+post_extract() {
+	if [ -d ../i3ipcpp-${version} ]; then
+		mv -f -T ../i3ipcpp-${version} lib/i3ipcpp
+	fi
+	if [ -d ../xpp-${version} ]; then
+		mv -f -T ../xpp-${version} lib/xpp
+	fi
+}
+
+post_install() {
+	vlicense LICENSE
+}
