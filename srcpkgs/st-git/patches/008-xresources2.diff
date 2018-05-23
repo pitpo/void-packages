@@ -1,0 +1,11 @@
+--- x.c	2018-05-23 21:25:57.592516951 +0200
++++ x.c	2018-05-23 21:26:44.803514339 +0200
+@@ -1061,8 +1061,6 @@
+ 	XColor xmousefg, xmousebg;
+ 	Pixmap blankpm;
+ 
+-	if (!(xw.dpy = XOpenDisplay(NULL)))
+-		die("can't open display\n");
+ 	xw.scr = XDefaultScreen(xw.dpy);
+ 	xw.depth = (USE_ARGB) ? 32: XDefaultDepth(xw.dpy, xw.scr);
+ 	if (!USE_ARGB)

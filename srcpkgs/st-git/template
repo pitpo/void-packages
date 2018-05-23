@@ -1,0 +1,41 @@
+# Template file for 'st-git'
+pkgname=st-git
+version=20180309
+revision=3
+build_style=gnu-makefile
+make_use_env=compliant
+hostmakedepends="pkg-config git"
+makedepends="fontconfig-devel libX11-devel libXft-devel"
+depends="ncurses st-terminfo-git-${version}_${revision}"
+short_desc="Simple terminal implementation for X"
+maintainer='Piotr Gabrielski <ppitpo@gmail.com>'
+license="MIT"
+homepage="https://st.suckless.org"
+replaces="st>=0"
+
+do_fetch() {
+	local url=git://git.suckless.org/st
+	msg_normal "Fetching source from git ...\n"
+	git clone "${url}" ${pkgname}-${version}
+}
+
+pre_build() {
+	cp ${FILESDIR}/config.h config.h
+	# We will use tic after install. See INSTALL.
+	sed -i '/tic/d' Makefile
+}
+
+post_install() {
+	vinstall st.info 644 usr/share/terminfo/s st.terminfo
+	vdoc README
+	vlicense LICENSE
+}
+
+st-terminfo-git_package() {
+	short_desc+=" - terminfo data"
+	noarch=yes
+	replaces="st-terminfo>=0"
+	pkg_install() {
+		vmove usr/share/terminfo
+	}
+}
